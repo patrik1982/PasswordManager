@@ -2,6 +2,7 @@ from PyQt5 import Qt
 
 from encryptedstring import EncryptedString
 
+
 class EncryptedTableModel(Qt.QAbstractTableModel):
     def __init__(self, *args, **kwargs):
         super(EncryptedTableModel, self).__init__(*args, **kwargs)
@@ -26,7 +27,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def columnCount(self, parent=Qt.QModelIndex()):
         return len(self.__headers)
 
-    def headerData(self, section, orientation, role = Qt.Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.Qt.DisplayRole):
         if role == Qt.Qt.DisplayRole:
             if orientation == 1:
                 return self.__headers[section].get_text()
@@ -35,8 +36,13 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         else:
             return None
 
-    def data(self, index=Qt.QModelIndex(), role = Qt.Qt.DisplayRole):
+    def data(self, index=Qt.QModelIndex(), role=Qt.Qt.DisplayRole):
         if role == Qt.Qt.DisplayRole:
             return self.__table[index.row()][index.column()].get_text()
+        elif role == Qt.Qt.BackgroundRole:
+            if self.__table[index.row()][index.column()].is_encrypted():
+                return Qt.QBrush(Qt.QColor(250, 220, 220))
+            else:
+                return None
         else:
             return None
