@@ -19,11 +19,11 @@ if __name__ == '__main__':
         import encryptedstring
 
         a = encryptedstring.EncryptedString()
-        a.set_text(b"Patrik")
+        a.set_text(u"Patrik")
         print(a.get_text())
-        a.set_text(b"Patrik ", b"qwertyuiqwertyui")
+        a.set_text(u"Patrik ", u"qwertyuiqwertyui")
         print(a.get_text())
-        print(a.get_text(b"qwertyuiqwertyui"))
-        a.set_text(b"Patrik", b"qwertyuiqwertyui")
+        print(a.get_text(u"qwertyuiqwertyui"))
+        a.set_text(u"Patrik", u"qwertyuiqwertyui")
         print(a.get_text())
-        print(a.get_text(b"qwertyuiqwertyui"))
+        print(a.get_text(u"qwertyuiqwertyui"))
