@@ -1,9 +1,14 @@
 from PyQt5 import Qt
 
+import encryptedtableview
+import encryptedtablemodel
+
 
 class MainWindow(Qt.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+
+
 
         self.setup_ui()
 
@@ -11,8 +16,11 @@ class MainWindow(Qt.QMainWindow):
         self.read_settings()
 
     def setup_ui(self):
-        self.__table = Qt.QTableView()
-        self.setCentralWidget(self.__table)
+        self.__tablemodel = encryptedtablemodel.EncryptedTableModel()
+        self.__encryptedtable = encryptedtableview.EncryptedTableView()
+        self.__encryptedtable.setModel(self.__tablemodel)
+        self.__encryptedtable.resizeColumnsToContents()
+        self.setCentralWidget(self.__encryptedtable)
 
     def new_file(self):
         pass
