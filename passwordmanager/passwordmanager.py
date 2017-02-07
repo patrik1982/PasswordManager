@@ -1,23 +1,17 @@
 from PyQt5 import Qt
 
-class MainWindow(Qt.QMainWindow):
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
-        self.setupUI()
-
-    def setupUI(self):
-        pass
+import mainwindow
 
 
 if __name__ == '__main__':
 
-    if False:
+    if True:
         import sys
 
         app = Qt.QApplication(sys.argv)
         app.setApplicationName("Password Manager")
 
-        passwordmanager = MainWindow()
+        passwordmanager = mainwindow.MainWindow()
         passwordmanager.show()
 
         sys.exit(app.exec_())

@@ -21,8 +21,8 @@ def encrypt(plaintext, password):
 
 
 class EncryptedString(Qt.QObject):
-    def __init__(self, parent=None):
-        super(EncryptedString, self).__init__(parent)
+    def __init__(self, *args, **kwargs):
+        super(EncryptedString, self).__init__(*args, **kwargs)
 
         self.__data = None
         self.__is_encrypted = False
