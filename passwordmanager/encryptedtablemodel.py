@@ -7,6 +7,9 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def __init__(self, *args, **kwargs):
         super(EncryptedTableModel, self).__init__(*args, **kwargs)
 
+        self.__headers = None
+        self.__table = None
+
         self.init_data()
 
     def clear(self):
@@ -27,12 +30,10 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         self.__table[1][0].encrypt(password)
         self.__table[2][1].encrypt(password)
 
-        self.__password = None
-
-    def rowCount(self, parent=Qt.QModelIndex()):
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.__table)
 
-    def columnCount(self, parent=Qt.QModelIndex()):
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.__headers)
 
     def headerData(self, section, orientation, role=Qt.Qt.DisplayRole):
@@ -42,20 +43,37 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
             else:
                 return str(section+1)
         else:
-            return None
+            return Qt.QVariant()
+
+    def setData(self, index=Qt.QModelIndex(), value=Qt.QVariant(), role=Qt.Qt.EditRole):
+        if role == Qt.Qt.EditRole:
+            self.__table[index.row()][index.column()].set_text(value)
+            self.dataChanged.emit(index, index)
+            return True
+        else:
+            return False
 
     def data(self, index=Qt.QModelIndex(), role=Qt.Qt.DisplayRole):
         if role == Qt.Qt.DisplayRole:
-        #    return self.__table[index.row()][index.column()].get_text()
-        #elif role == Qt.Qt.UserRole:
-            return self.__table[index.row()][index.column()].get_text(self.__password)
+            return self.__table[index.row()][index.column()].get_text()
+
+        elif role == Qt.Qt.EditRole:
+            return self.__table[index.row()][index.column()].get_text()
+
         elif role == Qt.Qt.BackgroundRole:
             if self.__table[index.row()][index.column()].is_encrypted():
                 return Qt.QBrush(Qt.QColor(250, 220, 220))
             else:
-                return None
+                return Qt.QVariant()
         else:
-            return None
+            return Qt.QVariant()
+
+    def flags(self, index):
+        return Qt.Qt.ItemIsEnabled | Qt.Qt.ItemIsSelectable | Qt.Qt.ItemIsEditable
 
     def set_password(self, password):
         self.__password = password
+
+    def delete_row(self, row):
+        del self.__table[row]
+        self.modelReset.emit()

@@ -1,12 +1,31 @@
 from PyQt5 import Qt
 
-import encryptedtableview
 import encryptedtablemodel
 
 
 class MainWindow(Qt.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+
+        self.__encryptedtable = None
+        self.__tablemodel = None
+
+        self.__action_new = None
+        self.__action_open = None
+        self.__action_save = None
+        self.__action_save_as = None
+        self.__action_exit = None
+        self.__action_insert_row_above = None
+        self.__action_insert_row_below = None
+        self.__action_delete_row = None
+        self.__action_clear_password = None
+        self.__action_set_password = None
+
+        self.__menu_file = None
+        self.__menu_edit = None
+        self.__menu_tools = None
+
+        self.__current_file = None
 
         self.setup_ui()
 
@@ -15,10 +34,8 @@ class MainWindow(Qt.QMainWindow):
         self.create_statusbar()
         self.read_settings()
 
-        self.__current_file = None
-
     def setup_ui(self):
-        self.__encryptedtable = encryptedtableview.EncryptedTableView()
+        self.__encryptedtable = Qt.QTableView()
         self.__tablemodel = encryptedtablemodel.EncryptedTableModel()
         self.__encryptedtable.setModel(self.__tablemodel)
         self.__encryptedtable.resizeColumnsToContents()
@@ -45,6 +62,20 @@ class MainWindow(Qt.QMainWindow):
             return False
         else:
             return self.save_file(filename)
+
+    def insert_row_above(self):
+        pass
+
+    def insert_row_below(self):
+        pass
+
+    def delete_row(self):
+        selection = self.__encryptedtable.selectionModel()
+        rows = set()
+        for index in selection.selectedIndexes():
+            rows.add(index.row())
+        if len(rows) == 1:
+            self.__tablemodel.delete_row(rows.pop())
 
     def set_password(self):
         pass
@@ -88,6 +119,20 @@ class MainWindow(Qt.QMainWindow):
         self.__action_exit.setStatusTip(u"Exit")
         self.__action_exit.triggered.connect(self.close)
 
+        self.__action_insert_row_above = Qt.QAction(u"&Insert row above", self)
+        self.__action_insert_row_above.setStatusTip(u"Insert row above current row")
+        self.__action_insert_row_above.triggered.connect(self.insert_row_above)
+
+        self.__action_insert_row_below = Qt.QAction(u"&Insert row below", self)
+        self.__action_insert_row_below.setShortcut("Ctrl+A")
+        self.__action_insert_row_below.setStatusTip(u"Insert row below current row")
+        self.__action_insert_row_below.triggered.connect(self.insert_row_below)
+
+        self.__action_delete_row = Qt.QAction(u"&Delete row", self)
+        self.__action_delete_row.setShortcut("Ctrl+D")
+        self.__action_delete_row.setStatusTip(u"Delete current row")
+        self.__action_delete_row.triggered.connect(self.delete_row)
+
         self.__action_enter_password = Qt.QAction(u"&Enter password...", self)
         self.__action_enter_password.setShortcut("Ctrl+E")
         self.__action_enter_password.setStatusTip(u"Enter password for current file")
@@ -112,21 +157,22 @@ class MainWindow(Qt.QMainWindow):
         self.__menu_file.addSeparator()
         self.__menu_file.addAction(self.__action_exit)
 
+        self.__menu_edit = self.menuBar().addMenu("&Edit")
+        self.__menu_edit.addAction(self.__action_insert_row_above)
+        self.__menu_edit.addAction(self.__action_insert_row_below)
+        self.__menu_edit.addAction(self.__action_delete_row)
+
         self.__menu_tools = self.menuBar().addMenu("&Tools")
         self.__menu_tools.addAction(self.__action_enter_password)
         self.__menu_tools.addAction(self.__action_clear_password)
         self.__menu_tools.addAction(self.__action_set_password)
 
     def create_statusbar(self):
-        locationLabel = Qt.QLabel(" W999 ")
-        locationLabel.setAlignment(Qt.Qt.AlignHCenter)
-        locationLabel.setMinimumSize(locationLabel.sizeHint())
+        location_label = Qt.QLabel(" W999 ")
+        location_label.setAlignment(Qt.Qt.AlignHCenter)
+        location_label.setMinimumSize(location_label.sizeHint())
 
-        formulaLabel = Qt.QLabel()
-        formulaLabel.setIndent(3)
-
-        self.statusBar().addWidget(locationLabel)
-        self.statusBar().addWidget(formulaLabel)
+        self.statusBar().addWidget(location_label)
 
     def read_settings(self):
         settings = Qt.QSettings("Patrik", "PasswordManager")
@@ -149,8 +195,8 @@ class MainWindow(Qt.QMainWindow):
                 return False
         return True
 
-    def load_file(self, fileName):
+    def load_file(self, filename):
         pass
 
-    def save_file(self, fileName):
+    def save_file(self, filename):
         pass
