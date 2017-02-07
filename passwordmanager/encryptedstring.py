@@ -67,7 +67,7 @@ class EncryptedString(Qt.QObject):
         self.__is_encrypted = False
 
     def set_text(self, plaintext, password=None):
-        self.__data = plaintext
+        self.__data = get_bytes(plaintext)
         self.__is_encrypted = (password is not None)
         if password:
             self.encrypt(password)
@@ -75,8 +75,14 @@ class EncryptedString(Qt.QObject):
     def get_text(self, password=None):
         if self.__is_encrypted:
             if password:
-                return decrypt(self.__data, password)
+                return decrypt(self.__data, password).decode('utf-8')
             else:
                 return base64.b64encode(self.__data).decode('utf-8')
         else:
             return self.__data.decode('utf-8')
+
+    def __str__(self):
+        return self.get_text()
+
+    def __repr__(self):
+        return "EncryptedString(\"%s\", %s)" % (self, self.is_encrypted())
