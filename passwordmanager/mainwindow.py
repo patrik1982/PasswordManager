@@ -56,6 +56,7 @@ class MainWindow(Qt.QMainWindow):
 
     def clear_password(self):
         self.__tablemodel.set_password(u"")
+        self.__tablemodel.modelReset.emit()
 
     def closeEvent(self, event):
         self.write_settings()
@@ -129,7 +130,9 @@ class MainWindow(Qt.QMainWindow):
 
     def read_settings(self):
         settings = Qt.QSettings("Patrik", "PasswordManager")
-        self.restoreGeometry(settings.value("geometry"))
+        saved_geometry = settings.value("geometry")
+        if saved_geometry:
+            self.restoreGeometry(saved_geometry)
 
     def write_settings(self):
         settings = Qt.QSettings("Patrik", "PasswordManager")
