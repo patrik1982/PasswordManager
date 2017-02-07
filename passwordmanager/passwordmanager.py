@@ -35,8 +35,8 @@ if __name__ == '__main__':
         print('repr: %r' % a)
         print()
 
-        a = encryptedstring.EncryptedString("Påtrik", False)
+        a = encryptedstring.EncryptedString("Påtrik", is_encrypted=False)
         print(a.get_text())
-        a = encryptedstring.EncryptedString("WAc1TmDlTIYZ10XH7vbm8D5BNocCTqgztCkpz++Mpq8=", True)
+        a = encryptedstring.EncryptedString("WAc1TmDlTIYZ10XH7vbm8D5BNocCTqgztCkpz++Mpq8=", is_encrypted=True)
         print(a.get_text())
         print(a.get_text(u"qwertyuiqwertyui"))

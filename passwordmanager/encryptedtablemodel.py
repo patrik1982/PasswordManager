@@ -7,6 +7,13 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def __init__(self, *args, **kwargs):
         super(EncryptedTableModel, self).__init__(*args, **kwargs)
 
+        self.init_data()
+
+    def clear(self):
+        self.init_data()
+        self.modelReset.emit()
+
+    def init_data(self):
         password = b"qwerty"
         self.__headers = [EncryptedString(u"Website"), EncryptedString(u"Username"), EncryptedString(u"Password")]
         self.__table = [
@@ -20,6 +27,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         self.__table[1][0].encrypt(password)
         self.__table[2][1].encrypt(password)
 
+        self.__password = None
 
     def rowCount(self, parent=Qt.QModelIndex()):
         return len(self.__table)
@@ -38,7 +46,9 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
 
     def data(self, index=Qt.QModelIndex(), role=Qt.Qt.DisplayRole):
         if role == Qt.Qt.DisplayRole:
-            return self.__table[index.row()][index.column()].get_text()
+        #    return self.__table[index.row()][index.column()].get_text()
+        #elif role == Qt.Qt.UserRole:
+            return self.__table[index.row()][index.column()].get_text(self.__password)
         elif role == Qt.Qt.BackgroundRole:
             if self.__table[index.row()][index.column()].is_encrypted():
                 return Qt.QBrush(Qt.QColor(250, 220, 220))
@@ -46,3 +56,6 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
                 return None
         else:
             return None
+
+    def set_password(self, password):
+        self.__password = password

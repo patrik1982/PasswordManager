@@ -85,4 +85,4 @@ class EncryptedString(Qt.QObject):
         return self.get_text()
 
     def __repr__(self):
-        return "EncryptedString(\"%s\", %s)" % (self, self.is_encrypted())
+        return "EncryptedString(\"%s\", is_encrypted=%s)" % (self, self.is_encrypted())
