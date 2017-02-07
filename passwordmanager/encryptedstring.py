@@ -24,37 +24,35 @@ class EncryptedString(Qt.QObject):
     def __init__(self, parent=None):
         super(EncryptedString, self).__init__(parent)
 
-        self.__plaintext = None
-        self.__ciphertext = None
+        self.__data = None
+        self.__is_encrypted = False
 
     def is_encrypted(self):
-        return self.__ciphertext is not None
+        return self.__is_encrypted
 
     def clear(self):
-        self.__ciphertext = None
-        self.__plaintext = None
+        self.__data = None
+        self.__is_encrypted = False
 
     def encrypt(self, password):
-        self.__ciphertext = encrypt(self.__plaintext, password)
-        self.__plaintext = None
+        self.__data = encrypt(self.__data, password)
+        self.__is_encrypted = True
 
     def decrypt(self, password):
-        self.__plaintext = decrypt(self.__ciphertext, password)
-        self.__ciphertext = None
+        self.__data = decrypt(self.__data, password)
+        self.__is_encrypted = False
 
     def set_text(self, plaintext, password=None):
+        self.__data = plaintext
+        self.__is_encrypted = (password is not None)
         if password:
-            self.__ciphertext = encrypt(plaintext, password)
-            self.__plaintext = None
-        else:
-            self.__plaintext = plaintext
-            self.__ciphertext = None
+            self.encrypt(password)
 
     def get_text(self, password=None):
-        if self.is_encrypted():
+        if self.__is_encrypted:
             if password:
-                return decrypt(self.__ciphertext, password)
+                return decrypt(self.__data, password)
             else:
-                return self.__ciphertext
+                return self.__data
         else:
-            return self.__plaintext
+            return self.__data

@@ -27,7 +27,7 @@ if __name__ == '__main__':
         a = encryptedstring.EncryptedString()
         a.set_text(b"Patrik")
         print(a.get_text())
-        a.set_text(b"Patrik", b"qwertyuiqwertyui")
+        a.set_text(b"Patrik ", b"qwertyuiqwertyui")
         print(a.get_text())
         print(a.get_text(b"qwertyuiqwertyui"))
         a.set_text(b"Patrik", b"qwertyuiqwertyui")
