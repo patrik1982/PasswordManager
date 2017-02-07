@@ -11,7 +11,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         self.__headers = [EncryptedString(u"Website"), EncryptedString(u"Username"), EncryptedString(u"Password")]
         self.__table = [
             [EncryptedString(u"gmail.com"), EncryptedString(u"patrik1982"), EncryptedString(u"mypass")],
-            [EncryptedString(u"yahoo.com"), EncryptedString(u"pater"), EncryptedString(u"my pass")],
+            [EncryptedString(u"yahoo.com"), EncryptedString(u"pater"), EncryptedString(u"mypass")],
             [EncryptedString(u"facebook.com"), EncryptedString(u"nisse"), EncryptedString(u"my!%p4sS")],
             [EncryptedString(u"amazon.de"), EncryptedString(u"björn"), EncryptedString(u"Lösenård fäm")],
         ]
