@@ -64,18 +64,22 @@ class MainWindow(Qt.QMainWindow):
             return self.save_file(filename)
 
     def insert_row_above(self):
-        pass
+        selection = self.__encryptedtable.selectionModel()
+        current_index = selection.currentIndex()
+        if current_index:
+            self.__tablemodel.insertRow(current_index.row())
 
     def insert_row_below(self):
-        pass
+        selection = self.__encryptedtable.selectionModel()
+        current_index = selection.currentIndex()
+        if current_index:
+            self.__tablemodel.insertRow(current_index.row() + 1)
 
     def delete_row(self):
         selection = self.__encryptedtable.selectionModel()
-        rows = set()
-        for index in selection.selectedIndexes():
-            rows.add(index.row())
-        if len(rows) == 1:
-            self.__tablemodel.delete_row(rows.pop())
+        current_index = selection.currentIndex()
+        if current_index:
+            self.__tablemodel.removeRow(current_index.row())
 
     def set_password(self):
         pass

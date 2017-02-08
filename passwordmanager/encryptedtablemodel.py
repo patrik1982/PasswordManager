@@ -1,5 +1,7 @@
 from PyQt5 import Qt
 
+from Crypto import Random
+
 from encryptedstring import EncryptedString
 
 
@@ -9,6 +11,8 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
 
         self.__headers = None
         self.__table = None
+        self.__password = u""
+        self.__random_password = None
 
         self.init_data()
 
@@ -17,7 +21,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         self.modelReset.emit()
 
     def init_data(self):
-        password = b"qwerty"
+        password = u"qwerty"
         self.__headers = [EncryptedString(u"Website"), EncryptedString(u"Username"), EncryptedString(u"Password")]
         self.__table = [
             [EncryptedString(u"gmail.com"), EncryptedString(u"patrik1982"), EncryptedString(u"mypass")],
@@ -29,6 +33,8 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
             row[-1].encrypt(password)
         self.__table[1][0].encrypt(password)
         self.__table[2][1].encrypt(password)
+
+        self.__password = password
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.__table)
@@ -74,6 +80,14 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def set_password(self, password):
         self.__password = password
 
-    def delete_row(self, row):
+    def insertRow(self, index, parent=Qt.QModelIndex(), *args, **kwargs):
+        new_row = [EncryptedString(u""), EncryptedString(u""), EncryptedString(u"")]
+        self.beginInsertRows(parent, index, index)
+        self.__table.insert(index, new_row)
+        self.endInsertRows()
+
+    def removeRow(self, row, parent=Qt.QModelIndex(), *args, **kwargs):
+        self.beginRemoveRows(parent, row, row)
         del self.__table[row]
-        self.modelReset.emit()
+        self.endRemoveRows()
+        return True
