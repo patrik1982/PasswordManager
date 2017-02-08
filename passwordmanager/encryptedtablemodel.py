@@ -1,4 +1,5 @@
 from PyQt5 import Qt
+from PyQt5 import QtCore
 
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -37,6 +38,8 @@ def decrypt_block(ciphertext, password):
 
 
 class EncryptedTableModel(Qt.QAbstractTableModel):
+    passwordStateChanged = QtCore.pyqtSignal([bool])
+
     def __init__(self, *args, **kwargs):
         super(EncryptedTableModel, self).__init__(*args, **kwargs)
 
@@ -57,6 +60,8 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         self.__password_hash = hashlib.sha256(get_bytes(initial_password)).digest()
         random_password = Random.get_random_bytes(16)   # The actual password used
         self.__encrypted_random_password = encrypt_block(random_password, initial_password)
+        self.__random_password = None
+        self.set_decrypt_only_selected(False)
 
         # Ugly hack to get an initial database before load-file functionality is implemented
         old_password = u""
@@ -77,6 +82,13 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
                 row[-1].encrypt(random_password)
             self.__table[1][0].encrypt(random_password)
             self.__table[2][1].encrypt(random_password)
+        self.passwordStateChanged.emit(False)
+
+    def decrypt_only_selected(self):
+        return self.__decrypt_only_selected
+
+    def set_decrypt_only_selected(self, value):
+        self.__decrypt_only_selected = value
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.__table)
@@ -103,7 +115,14 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
 
     def data(self, index=Qt.QModelIndex(), role=Qt.Qt.DisplayRole):
         if role == Qt.Qt.DisplayRole:
-            return self.__table[index.row()][index.column()].get_text(self.__random_password)
+            if self.__decrypt_only_selected:
+                selection = self.parent().selectionModel()
+                if index in selection.selectedIndexes():
+                    return self.__table[index.row()][index.column()].get_text(self.__random_password)
+                else:
+                    return self.__table[index.row()][index.column()].get_text()
+            else:
+                return self.__table[index.row()][index.column()].get_text(self.__random_password)
 
         elif role == Qt.Qt.EditRole:
             return self.__table[index.row()][index.column()].get_text()
@@ -125,8 +144,19 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def set_password(self, password):
         if self.validate_password(password):
             self.__random_password = decrypt_block(self.__encrypted_random_password, password)
+            self.passwordStateChanged.emit(True)
         else:
             self.__random_password = u""
+            self.passwordStateChanged.emit(False)
+
+    def change_password(self, old_password, new_password):
+        if self.validate_password(old_password):
+            self.__password_hash = hashlib.sha256(get_bytes(new_password)).digest()
+            random_password = decrypt_block(self.__encrypted_random_password, old_password)
+            self.__encrypted_random_password = encrypt_block(random_password, new_password)
+            return True
+        else:
+            return False
 
     def insertRow(self, index, parent=Qt.QModelIndex(), *args, **kwargs):
         new_row = [EncryptedString(u""), EncryptedString(u""), EncryptedString(u"")]

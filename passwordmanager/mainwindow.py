@@ -1,7 +1,11 @@
 from PyQt5 import Qt
+from PyQt5 import QtCore
 
 import encryptedtablemodel
 
+
+UNICODE_PADLOCK = b"\xf0\x9f\x94\x92".decode('utf-8')
+UNICODE_OPEN_PADLOCK = b"\xf0\x9f\x94\x93".decode('utf-8')
 
 class MainWindow(Qt.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -10,11 +14,15 @@ class MainWindow(Qt.QMainWindow):
         self.__encryptedtable = None
         self.__tablemodel = None
 
+        self.__location_label = None
+        self.__lock_label = None
+
         self.__action_new = None
         self.__action_open = None
         self.__action_save = None
         self.__action_save_as = None
         self.__action_exit = None
+        self.__action_toggle_only_selected = None
         self.__action_toggle_encryption = None
         self.__action_insert_row_above = None
         self.__action_insert_row_below = None
@@ -29,18 +37,31 @@ class MainWindow(Qt.QMainWindow):
         self.__current_file = None
 
         self.setup_ui()
-
+        self.create_statusbar()
         self.create_actions()
         self.create_menus()
-        self.create_statusbar()
         self.read_settings()
+
+        self.__tablemodel.clear()
 
     def setup_ui(self):
         self.__encryptedtable = Qt.QTableView()
-        self.__tablemodel = encryptedtablemodel.EncryptedTableModel()
+        self.__tablemodel = encryptedtablemodel.EncryptedTableModel(parent=self.__encryptedtable)
+        self.__tablemodel.passwordStateChanged.connect(self.update_security_display)
         self.__encryptedtable.setModel(self.__tablemodel)
         self.__encryptedtable.resizeColumnsToContents()
         self.setCentralWidget(self.__encryptedtable)
+
+    def update_security_display(self, valid):
+        self.__lock_label.setText(UNICODE_PADLOCK)
+        palette = self.__lock_label.palette()
+        if valid:
+            self.__lock_label.setText(u" " + UNICODE_PADLOCK + u" ")
+            palette.setColor(Qt.QPalette.Window, Qt.QColor(Qt.Qt.green));
+        else:
+            self.__lock_label.setText(u" " + UNICODE_OPEN_PADLOCK + u" ")
+            palette.setColor(Qt.QPalette.Window, Qt.QColor(Qt.Qt.red));
+        self.__lock_label.setPalette(palette);
 
     def new_file(self):
         if self.ok_to_continue():
@@ -62,6 +83,12 @@ class MainWindow(Qt.QMainWindow):
             return False
         else:
             return self.save_file(filename)
+
+    def toggle_only_selected(self):
+        self.__tablemodel.set_decrypt_only_selected(self.__action_toggle_only_selected.isChecked())
+        topleft_index = self.__tablemodel.index(0,0)
+        bottomright_index = self.__tablemodel.index(self.__tablemodel.rowCount()-1,self.__tablemodel.columnCount()-1)
+        self.__tablemodel.dataChanged.emit(topleft_index, bottomright_index)
 
     def toggle_encryption(self):
         selection = self.__encryptedtable.selectionModel()
@@ -128,6 +155,12 @@ class MainWindow(Qt.QMainWindow):
         self.__action_exit.setStatusTip(u"Exit")
         self.__action_exit.triggered.connect(self.close)
 
+        self.__action_toggle_only_selected = Qt.QAction(u"&Decrypt selected cells only", self)
+        self.__action_toggle_only_selected.setShortcut("Ctrl+W")
+        self.__action_toggle_only_selected.setCheckable(True)
+        self.__action_toggle_only_selected.changed.connect(self.toggle_only_selected)
+        self.__action_toggle_only_selected.setChecked(self.__tablemodel.decrypt_only_selected())
+
         self.__action_toggle_encryption = Qt.QAction(u"&Toggle encryption for cell", self)
         self.__action_toggle_encryption.setShortcut("Ctrl+T")
         self.__action_toggle_encryption.setStatusTip(u"Turns encryption on/off for current sell")
@@ -172,6 +205,7 @@ class MainWindow(Qt.QMainWindow):
         self.__menu_file.addAction(self.__action_exit)
 
         self.__menu_edit = self.menuBar().addMenu("&Edit")
+        self.__menu_edit.addAction(self.__action_toggle_only_selected)
         self.__menu_edit.addAction(self.__action_toggle_encryption)
         self.__menu_edit.addAction(self.__action_insert_row_above)
         self.__menu_edit.addAction(self.__action_insert_row_below)
@@ -183,11 +217,17 @@ class MainWindow(Qt.QMainWindow):
         self.__menu_tools.addAction(self.__action_set_password)
 
     def create_statusbar(self):
-        location_label = Qt.QLabel(" W999 ")
-        location_label.setAlignment(Qt.Qt.AlignHCenter)
-        location_label.setMinimumSize(location_label.sizeHint())
+        self.__location_label = Qt.QLabel(" W999 ")
+        self.__location_label.setAlignment(Qt.Qt.AlignHCenter)
+        self.__location_label.setMinimumSize(self.__location_label.sizeHint())
 
-        self.statusBar().addWidget(location_label)
+        self.__lock_label = Qt.QLabel(u"")
+        self.__lock_label.setAutoFillBackground(True)
+        self.__lock_label.setAlignment(Qt.Qt.AlignHCenter)
+        self.__lock_label.setMinimumSize(self.__lock_label.sizeHint())
+
+        self.statusBar().addWidget(self.__location_label)
+        self.statusBar().addWidget(self.__lock_label)
 
     def read_settings(self):
         settings = Qt.QSettings("Patrik", "PasswordManager")
