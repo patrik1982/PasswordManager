@@ -48,6 +48,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         self.__password_hash = None
         self.__encrypted_random_password = None
         self.__random_password = None
+        self.__decrypt_only_selected = True
 
         self.init_data()
 
@@ -90,10 +91,10 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def set_decrypt_only_selected(self, value):
         self.__decrypt_only_selected = value
 
-    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+    def rowCount(self, parent=Qt.QModelIndex(), *args, **kwargs):
         return len(self.__table)
 
-    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+    def columnCount(self, parent=Qt.QModelIndex(), *args, **kwargs):
         return len(self.__headers)
 
     def headerData(self, section, orientation, role=Qt.Qt.DisplayRole):
