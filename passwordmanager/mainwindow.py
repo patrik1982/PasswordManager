@@ -15,6 +15,7 @@ class MainWindow(Qt.QMainWindow):
         self.__action_save = None
         self.__action_save_as = None
         self.__action_exit = None
+        self.__action_toggle_encryption = None
         self.__action_insert_row_above = None
         self.__action_insert_row_below = None
         self.__action_delete_row = None
@@ -40,7 +41,6 @@ class MainWindow(Qt.QMainWindow):
         self.__encryptedtable.setModel(self.__tablemodel)
         self.__encryptedtable.resizeColumnsToContents()
         self.setCentralWidget(self.__encryptedtable)
-        self.__tablemodel.set_password(u"qwerty")
 
     def new_file(self):
         if self.ok_to_continue():
@@ -62,6 +62,11 @@ class MainWindow(Qt.QMainWindow):
             return False
         else:
             return self.save_file(filename)
+
+    def toggle_encryption(self):
+        selection = self.__encryptedtable.selectionModel()
+        for index in selection.selectedIndexes():
+            self.__tablemodel.toggle_encryption(index)
 
     def insert_row_above(self):
         selection = self.__encryptedtable.selectionModel()
@@ -123,6 +128,11 @@ class MainWindow(Qt.QMainWindow):
         self.__action_exit.setStatusTip(u"Exit")
         self.__action_exit.triggered.connect(self.close)
 
+        self.__action_toggle_encryption = Qt.QAction(u"&Toggle encryption for cell", self)
+        self.__action_toggle_encryption.setShortcut("Ctrl+T")
+        self.__action_toggle_encryption.setStatusTip(u"Turns encryption on/off for current sell")
+        self.__action_toggle_encryption.triggered.connect(self.toggle_encryption)
+
         self.__action_insert_row_above = Qt.QAction(u"&Insert row above", self)
         self.__action_insert_row_above.setStatusTip(u"Insert row above current row")
         self.__action_insert_row_above.triggered.connect(self.insert_row_above)
@@ -162,6 +172,7 @@ class MainWindow(Qt.QMainWindow):
         self.__menu_file.addAction(self.__action_exit)
 
         self.__menu_edit = self.menuBar().addMenu("&Edit")
+        self.__menu_edit.addAction(self.__action_toggle_encryption)
         self.__menu_edit.addAction(self.__action_insert_row_above)
         self.__menu_edit.addAction(self.__action_insert_row_below)
         self.__menu_edit.addAction(self.__action_delete_row)
