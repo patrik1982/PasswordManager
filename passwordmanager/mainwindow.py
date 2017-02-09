@@ -70,15 +70,12 @@ class MainWindow(Qt.QMainWindow):
         if self.ok_to_continue():
             self.__tablemodel.clear()
             self.__encryptedtable.setModel(self.__tablemodel)
+            self.__current_file = None
 
     def open(self):
         (filename, _) = Qt.QFileDialog.getOpenFileName(self, u"Save password file", u".")
         if filename:
-            savefile = open(filename, 'r')
-            savedata = ''.join(savefile.readlines())
-            savefile.close()
-            self.__tablemodel.load_savedata(savedata)
-            self.__action_toggle_only_selected.setChecked(self.__tablemodel.decrypt_only_selected())
+            self.load_file(filename)
 
     def save(self):
         if not self.__current_file:
@@ -260,7 +257,12 @@ class MainWindow(Qt.QMainWindow):
         return True
 
     def load_file(self, filename):
-        pass
+        savefile = open(filename, 'r')
+        savedata = ''.join(savefile.readlines())
+        savefile.close()
+        self.__tablemodel.load_savedata(savedata)
+        self.__current_file = filename
+        self.__action_toggle_only_selected.setChecked(self.__tablemodel.decrypt_only_selected())
 
     def save_file(self, filename):
         backup_created = False
@@ -272,6 +274,7 @@ class MainWindow(Qt.QMainWindow):
         savefile = open(filename, 'w')
         savefile.write(savedata)
         savefile.close()
+        self.__current_file = filename
 
         if backup_created:
             os.remove(filename+u".backup")
