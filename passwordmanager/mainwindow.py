@@ -1,11 +1,14 @@
 from PyQt5 import Qt
 from PyQt5 import QtCore
 
+import os
+
 import encryptedtablemodel
 
 
 UNICODE_PADLOCK = b"\xf0\x9f\x94\x92".decode('utf-8')
 UNICODE_OPEN_PADLOCK = b"\xf0\x9f\x94\x93".decode('utf-8')
+
 
 class MainWindow(Qt.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -69,7 +72,13 @@ class MainWindow(Qt.QMainWindow):
             self.__encryptedtable.setModel(self.__tablemodel)
 
     def open(self):
-        pass
+        (filename, _) = Qt.QFileDialog.getOpenFileName(self, u"Save password file", u".")
+        if filename:
+            savefile = open(filename, 'r')
+            savedata = ''.join(savefile.readlines())
+            savefile.close()
+            self.__tablemodel.load_savedata(savedata)
+            self.__action_toggle_only_selected.setChecked(self.__tablemodel.decrypt_only_selected())
 
     def save(self):
         if not self.__current_file:
@@ -254,4 +263,15 @@ class MainWindow(Qt.QMainWindow):
         pass
 
     def save_file(self, filename):
-        pass
+        backup_created = False
+        if os.path.exists(filename):
+            os.rename(filename, filename+u".backup")
+            backup_created = True
+
+        savedata = self.__tablemodel.get_savedata()
+        savefile = open(filename, 'w')
+        savefile.write(savedata)
+        savefile.close()
+
+        if backup_created:
+            os.remove(filename+u".backup")

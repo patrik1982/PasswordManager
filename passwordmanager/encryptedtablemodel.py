@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from Crypto.Cipher import AES
 from Crypto import Random
 
+import base64
 import hashlib
 
 from encryptedstring import EncryptedString
@@ -62,7 +63,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         random_password = Random.get_random_bytes(16)   # The actual password used
         self.__encrypted_random_password = encrypt_block(random_password, initial_password)
         self.__random_password = None
-        self.set_decrypt_only_selected(False)
+        self.set_decrypt_only_selected(True)
 
         # Ugly hack to get an initial database before load-file functionality is implemented
         old_password = u""
@@ -72,7 +73,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
 
             random_password = decrypt_block(self.__encrypted_random_password, old_password)
             self.__encrypted_random_password = encrypt_block(random_password, new_password)
-            self.__headers = [EncryptedString(u"Website"), EncryptedString(u"Username"), EncryptedString(u"Password")]
+            self.__headers = [u"Website", u"Username", u"Password"]
             self.__table = [
                 [EncryptedString(u"gmail.com"), EncryptedString(u"patrik1982"), EncryptedString(u"mypass")],
                 [EncryptedString(u"yahoo.com"), EncryptedString(u"pater"), EncryptedString(u"mypass")],
@@ -100,7 +101,7 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def headerData(self, section, orientation, role=Qt.Qt.DisplayRole):
         if role == Qt.Qt.DisplayRole:
             if orientation == 1:
-                return self.__headers[section].get_text()
+                return self.__headers[section]
             else:
                 return str(section+1)
         else:
@@ -108,11 +109,17 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
 
     def setData(self, index=Qt.QModelIndex(), value=Qt.QVariant(), role=Qt.Qt.EditRole):
         if role == Qt.Qt.EditRole:
-            self.__table[index.row()][index.column()].set_text(value)
-            self.dataChanged.emit(index, index)
-            return True
-        else:
-            return False
+            if self.__table[index.row()][index.column()].is_encrypted():
+                if self.__random_password:
+                    self.__table[index.row()][index.column()].set_text(value)
+                    self.__table[index.row()][index.column()].encrypt(self.__random_password)
+                    self.dataChanged.emit(index, index)
+                    return True
+            else:
+                self.__table[index.row()][index.column()].set_text(value)
+                self.dataChanged.emit(index, index)
+                return True
+        return False
 
     def data(self, index=Qt.QModelIndex(), role=Qt.Qt.DisplayRole):
         if role == Qt.Qt.DisplayRole:
@@ -184,3 +191,25 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
             return True
         else:
             return False
+
+    def load_savedata(self, savedata):
+        self.init_data()
+
+        lines = savedata.split('\n')
+        self.__password_hash = base64.b64decode(lines[0].encode('utf-8'))
+        self.__encrypted_random_password = base64.b64decode(lines[1].encode('utf-8'))
+        self.__headers = eval(lines[2].encode('utf-8'))
+        self.__table = []
+        for line in lines[3:]:
+            if line:
+                self.__table.append(eval(line))
+        self.modelReset.emit()
+
+    def get_savedata(self):
+        savedata = u""
+        savedata += base64.b64encode(self.__password_hash).decode('utf-8') + '\n'
+        savedata += base64.b64encode(self.__encrypted_random_password).decode('utf-8') + '\n'
+        savedata += "%r" % self.__headers + '\n'
+        for row in self.__table:
+            savedata += "%r" % row + '\n'
+        return savedata
