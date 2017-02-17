@@ -1,41 +1,14 @@
-from PyQt5 import Qt
-from PyQt5 import QtCore
-
-from Crypto.Cipher import AES
-from Crypto import Random
-
 import base64
 import hashlib
 
+from PyQt5 import Qt
+from PyQt5 import QtCore
+
+from Crypto import Random
+
+import crypto_utils
+import utils
 from encryptedstring import EncryptedString
-
-
-def get_bytes(s):
-    if isinstance(s, str):
-        s_bytes = s.encode('utf-8')
-    elif isinstance(s, bytes):
-        s_bytes = s
-    elif s is None:
-        s_bytes = b""
-    else:
-        print("Unknown type %s" % (type(s)), s)
-        s_bytes = None
-    return s_bytes
-
-
-def create_aes_password(password):
-    passhash = hashlib.sha1(get_bytes(password)).digest()
-    return passhash[:16]
-
-
-def encrypt_block(plaintext, password):
-    cipher = AES.new(create_aes_password(password), AES.MODE_ECB)
-    return cipher.encrypt(plaintext)
-
-
-def decrypt_block(ciphertext, password):
-    cipher = AES.new(create_aes_password(password), AES.MODE_ECB)
-    return cipher.decrypt(ciphertext)
 
 
 class EncryptedTableModel(Qt.QAbstractTableModel):
@@ -59,9 +32,9 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
 
     def init_data(self):
         initial_password = u""
-        self.__password_hash = hashlib.sha256(get_bytes(initial_password)).digest()
+        self.__password_hash = hashlib.sha256(utils.get_bytes(initial_password)).digest()
         random_password = Random.get_random_bytes(16)   # The actual password used
-        self.__encrypted_random_password = encrypt_block(random_password, initial_password)
+        self.__encrypted_random_password = crypto_utils.encrypt_block(random_password, initial_password)
         self.__random_password = None
         self.set_decrypt_only_selected(True)
 
@@ -69,10 +42,10 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         old_password = u""
         new_password = u"qwerty"
         if self.validate_password(old_password):
-            self.__password_hash = hashlib.sha256(get_bytes(new_password)).digest()
+            self.__password_hash = hashlib.sha256(utils.get_bytes(new_password)).digest()
 
-            random_password = decrypt_block(self.__encrypted_random_password, old_password)
-            self.__encrypted_random_password = encrypt_block(random_password, new_password)
+            random_password = crypto_utils.decrypt_block(self.__encrypted_random_password, old_password)
+            self.__encrypted_random_password = crypto_utils.encrypt_block(random_password, new_password)
             self.__headers = [u"Website", u"Username", u"Password"]
             self.__table = [
                 [EncryptedString(u"gmail.com"), EncryptedString(u"patrik1982"), EncryptedString(u"mypass")],
@@ -147,11 +120,11 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
         return Qt.Qt.ItemIsEnabled | Qt.Qt.ItemIsSelectable | Qt.Qt.ItemIsEditable
 
     def validate_password(self, password):
-        return hashlib.sha256(get_bytes(password)).digest() == self.__password_hash
+        return hashlib.sha256(utils.get_bytes(password)).digest() == self.__password_hash
 
     def set_password(self, password):
         if self.validate_password(password):
-            self.__random_password = decrypt_block(self.__encrypted_random_password, password)
+            self.__random_password = crypto_utils.decrypt_block(self.__encrypted_random_password, password)
             self.passwordStateChanged.emit(True)
         else:
             self.__random_password = u""
@@ -159,9 +132,9 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
 
     def change_password(self, old_password, new_password):
         if self.validate_password(old_password):
-            self.__password_hash = hashlib.sha256(get_bytes(new_password)).digest()
-            random_password = decrypt_block(self.__encrypted_random_password, old_password)
-            self.__encrypted_random_password = encrypt_block(random_password, new_password)
+            self.__password_hash = hashlib.sha256(utils.get_bytes(new_password)).digest()
+            random_password = crypto_utils.decrypt_block(self.__encrypted_random_password, old_password)
+            self.__encrypted_random_password = crypto_utils.encrypt_block(random_password, new_password)
             return True
         else:
             return False
