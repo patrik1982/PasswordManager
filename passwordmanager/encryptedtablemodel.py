@@ -122,6 +122,9 @@ class EncryptedTableModel(Qt.QAbstractTableModel):
     def validate_password(self, password):
         return hashlib.sha256(utils.get_bytes(password)).digest() == self.__password_hash
 
+    def get_password_hash(self):
+        return self.__password_hash
+
     def set_password(self, password):
         if self.validate_password(password):
             self.__random_password = crypto_utils.decrypt_block(self.__encrypted_random_password, password)

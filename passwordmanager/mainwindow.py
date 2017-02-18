@@ -1,9 +1,9 @@
 from PyQt5 import Qt
-from PyQt5 import QtCore
 
 import os
 
 import encryptedtablemodel
+import changepassworddialog
 
 
 UNICODE_PADLOCK = b"\xf0\x9f\x94\x92".decode('utf-8')
@@ -120,7 +120,11 @@ class MainWindow(Qt.QMainWindow):
             self.__tablemodel.removeRow(current_index.row())
 
     def set_password(self):
-        pass
+        dlg = changepassworddialog.ChangePasswordDialog(self.__tablemodel.get_password_hash())
+        if dlg.exec_() == Qt.QDialog.Accepted:
+            self.__tablemodel.change_password(dlg.get_current_password(), dlg.get_new_password())
+            self.__tablemodel.set_password(dlg.get_new_password())
+            dlg.clear()
 
     def enter_password(self):
         (text, input_valid) = Qt.QInputDialog.getText(self, u"Enter password", u"Password", Qt.QLineEdit.Password)
